@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      position: relative;
+      font-family: -apple-system, sans-serif;
+      overflow: hidden; /* 防止页面滚动 */
+      user-select: none; /* 禁止文字选中 */
+    }
+
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-image: url('https://github.com/bingbingfanC/test/blob/main/bg.jpg?raw=true');
+      background-size: cover;
+      filter: brightness(1);
+      border: 2px solid rgb(255, 0, 0); /* 调试用边框 */
+    }
+
+    .interactive-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.5s;
+      max-width: 30%;
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .zoomed {
+      transform: translate(-50%, -50%) scale(2);
+      z-index: 10;
+    }
+
+    .dragging {
+      transition: none !important; /* 拖动时禁用过渡效果 */
+    }
+  </style>
+</head>
+<body>
+<div class="background"></div>
+<img src="https://github.com/bingbingfanC/test/blob/main/interactive.jpg?raw=true"
+     class="interactive-image"
+     alt="可点击放大的图片"
+     id="interactiveImg">
+
+<script>
+  const interactiveImg = document.getElementById('interactiveImg');
+  const background = document.querySelector('.background');
+  let clickCount = 0;
+  const maxClicks = 10;
+  const scalePerClick = 0.1;
+  const maxScale = 2;
+
+  // 拖动相关变量
+  let isDragging = false;
+  let startX, startY;
+  let initialX, initialY;
+  let currentX = 50; // 初始位置百分比
+  let currentY = 50;
+
+  // 碰撞检测参数
+  const collisionThreshold = 10; // 碰撞检测阈值(像素)
+
+  // 鼠标事件处理
+  interactiveImg.addEventListener('mousedown', startDrag);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', stopDrag);
+
+  // 原点击功能
+  interactiveImg.addEventListener('click', handleClick);
+
+  function startDrag(e) {
+    if(isDragging) return;
+
+    isDragging = true;
+    interactiveImg.classList.add('dragging');
+
+    // 记录初始位置
+    startX = e.clientX;
+    startY = e.clientY;
+
+    // 获取当前元素位置
+    const rect = interactiveImg.getBoundingClientRect();
+    initialX = rect.left + rect.width/2;
+    initialY = rect.top + rect.height/2;
+
+    e.preventDefault();
+  }
+
+  function drag(e) {
+    if(!isDragging) return;
+
+    // 计算偏移量
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // 计算新位置
+    const newX = initialX + dx;
+    const newY = initialY + dy;
+
+    // 转换为百分比
+    currentX = (newX / window.innerWidth) * 100;
+    currentY = (newY / window.innerHeight) * 100;
+
+    // 更新位置
+    interactiveImg.style.left = currentX + '%';
+    interactiveImg.style.top = currentY + '%';
+
+    checkCollision();
+  }
+
+  function stopDrag() {
+    if(!isDragging) return;
+
+    isDragging = false;
+    interactiveImg.classList.remove('dragging');
+
+    // 检查是否需要触发消失
+    if(checkCollision()) {
+      hideImage();
+    }
+  }
+
+  function checkCollision() {
+    const imgRect = interactiveImg.getBoundingClientRect();
+    const bgRect = background.getBoundingClientRect();
+
+    // 计算碰撞
+    const collisionLeft = imgRect.left <= bgRect.left + collisionThreshold;
+    const collisionRight = imgRect.right >= bgRect.right - collisionThreshold;
+    const collisionTop = imgRect.top <= bgRect.top + collisionThreshold;
+    const collisionBottom = imgRect.bottom >= bgRect.bottom - collisionThreshold;
+
+    return collisionLeft || collisionRight || collisionTop || collisionBottom;
+  }
+
+  function hideImage() {
+    interactiveImg.style.opacity = '0';
+    setTimeout(() => {
+      interactiveImg.style.display = 'none';
+    }, 500);
+  }
+
+  function handleClick() {
+    if(isDragging) return; // 拖动时不触发点击事件
+
+    if(clickCount < maxClicks) {
+      clickCount += 1;
+      const currentScale = Math.min(1 + clickCount * scalePerClick, maxScale);
+      interactiveImg.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+
+      if(currentScale === maxScale) {
+        interactiveImg.style.pointerEvents = 'none';
+        setTimeout(() => {
+          interactiveImg.style.pointerEvents = 'auto';
+        }, 300);
+      }
+    } else {
+      hideImage();
+    }
+  }
+</script>
+</body>
+</html>
