@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* 基础样式 */
+    body {
+      margin: 0;
+      height: 100vh;
+      position: relative;
+      font-family: -apple-system, sans-serif;
+    }
+
+    /* 背景图容器 */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-image: url('https://github.com/bingbingfanC/test/blob/main/bg.jpg?raw=true');
+      background-size: cover;
+      filter: brightness(1)
+    }
+
+    /* 互动图片容器 */
+    .interactive-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      max-width: 30%;
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    /* 放大状态 */
+    .zoomed {
+      transform: translate(-50%, -50%) scale(2);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<!-- 背景图 -->
+<div class="background"></div>
+
+<!-- 互动图片 -->
+<img src="https://github.com/bingbingfanC/test/blob/main/interactive.jpg?raw=true"
+     class="interactive-image"
+     alt="可点击放大的图片"
+     id="interactiveImg">
+
+<script>
+  const interactiveImg = document.getElementById('interactiveImg');
+  let clickCount = 0;
+  const maxClicks = 10;
+  const scalePerClick = 0.1; // 每次点击放大10%
+  const maxScale = 2; // 最大放大倍数
+
+  interactiveImg.addEventListener('click', () => {
+    if (clickCount < maxClicks) {
+      clickCount += 1;
+      const currentScale = Math.min(1 + clickCount * scalePerClick, maxScale);
+      interactiveImg.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+
+      // 如果需要显示放大后的pointerEvents禁用，可以保留原有逻辑
+      if (currentScale === maxScale) {
+        interactiveImg.style.pointerEvents = 'none';
+        setTimeout(() => {
+          interactiveImg.style.pointerEvents = 'auto';
+        }, 300);
+      }
+    } else {
+      // 第十次点击后隐藏图片
+      interactiveImg.style.opacity = '0';
+      setTimeout(() => {
+        interactiveImg.style.display = 'none';
+      }, 500); // 与透明度过渡时间一致
+    }
+  });
+</script>
+</body>
+</html>
